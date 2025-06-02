@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Scientific Calculator with Explanation</title>
+  <style>
+    :root {
+      --bg-color: #f0f2f5;
+      --calc-bg: #fff;
+      --display-bg: #eaeaea;
+      --text-color: #000;
+      --btn-bg: #f1f1f1;
+      --btn-hover: #ddd;
+      --accent-color: #007bff;
+      --success-color: #28a745;
+      --error-color: #dc3545;
+    }
+
+    body.dark {
+      --bg-color: #121212;
+      --calc-bg: #1e1e1e;
+      --display-bg: #333;
+      --text-color: #fff;
+      --btn-bg: #2c2c2c;
+      --btn-hover: #444;
+      --accent-color: #339af0;
+      --success-color: #2f9e44;
+      --error-color: #c92a2a;
+    }
+
+    body {
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      height: 100vh;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      transition: background 0.4s ease, color 0.4s ease;
+      user-select: none;
+    }
+
+    .container {
+      display: flex;
+      gap: 20px;
+      position: relative;
+      max-width: 720px;
+      width: 100%;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .calculator {
+      background: var(--calc-bg);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      padding: 24px;
+      width: 440px;
+      animation: fadeIn 0.8s ease-in-out;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 14px;
+      gap: 10px;
+    }
+
+    .top-bar button {
+      flex: 1;
+      background: var(--accent-color);
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 10px 0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      user-select: none;
+      font-size: 14px;
+    }
+
+    .top-bar button:hover {
+      background: #0056b3;
+    }
+
+    .display {
+      width: 100%;
+      height: 70px;
+      background: var(--display-bg);
+      border-radius: 12px;
+      text-align: right;
+      font-size: 28px;
+      padding: 12px 20px;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+      overflow-x: auto;
+      transition: background 0.4s ease;
+      font-weight: 600;
+      font-family: 'Courier New', Courier, monospace;
+      letter-spacing: 0.05em;
+      color: var(--text-color);
+    }
+
+    .explanation {
+      width: 100%;
+      min-height: 48px;
+      font-size: 14px;
+      color: gray;
+      margin-bottom: 24px;
+      padding: 12px 16px;
+      background: var(--display-bg);
+      border-radius: 12px;
+      box-sizing: border-box;
+      white-space: pre-wrap;
+      user-select: none;
+      font-style: italic;
+      line-height: 1.4;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      width: 100%;
+    }
+
+    button {
+      padding: 18px 0;
+      font-size: 18px;
+      border: none;
+      border-radius: 12px;
+      background: var(--btn-bg);
+      transition: background 0.25s ease, transform 0.1s ease;
+      cursor: pointer;
+      user-select: none;
+      font-weight: 600;
+      color: var(--text-color);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+      outline-offset: 2px;
+      outline-color: transparent;
+    }
+
+    button:hover {
+      background: var(--btn-hover);
+      transform: translateY(-3px);
+      outline-color: var(--accent-color);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .equal { background: var(--success-color); color: #fff; font-weight: 700; }
+    .clear { background: var(--error-color); color: #fff; font-weight: 700; }
+    .operator { background: var(--accent-color); color: #fff; font-weight: 700; }
+
+    /* History Panel */
+    .history-panel {
+      background: var(--calc-bg);
+      border-radius: 16px;
+      padding: 24px;
+      width: 260px;
+      max-height: 480px;
+      overflow-y: auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .history-panel.hidden {
+      transform: translateX(320px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .history-panel.visible {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .history-panel h3 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--accent-color);
+      user-select: none;
+    }
+
+    #historyList {
+      flex: 1;
+      overflow-y: auto;
+      user-select: text;
+      border: 1px solid var(--display-bg);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      color: var(--text-color);
+      background-color: var(--display-bg);
+    }
+
+    .history-entry {
+      padding: 6px 8px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-entry:hover {
+      background-color: var(--btn-hover);
+    }
+
+    .history-buttons {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .history-buttons button {
+      flex: 1;
+      padding: 12px 0;
+      border-radius: 12px;
+      background: var(--accent-color);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+      border: none;
+    }
+
+    .history-buttons button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="calculator" role="region" aria-label="Scientific Calculator">
+      <div class="top-bar">
+        <button id="toggleHistoryBtn" aria-pressed="false" aria-label="Toggle history panel">Toggle History</button>
+        <button id="toggleThemeBtn" aria-pressed="false" aria-label="Toggle dark/light theme">Toggle Theme</button>
+      </div>
+      <div class="display" id="display" aria-live="polite" aria-atomic="true">0</div>
+      <div class="explanation" id="explanation" aria-live="polite" aria-atomic="true"></div>
+      <div class="buttons" role="group" aria-label="Calculator Buttons">
+        <button class="clear" id="clearBtn" aria-label="Clear display">C</button>
+        <button onclick="appendValue('%')" aria-label="Percentage">%</button>
+        <button onclick="appendValue('^')" aria-label="Power">xʸ</button>
+        <button onclick="appendValue('Math.sqrt(')" aria-label="Square root">√</button>
+        <button onclick="backspace()" aria-label="Backspace">⌫</button>
+
+        <button onclick="appendValue('sin(')" aria-label="Sine">sin</button>
+        <button onclick="appendValue('cos(')" aria-label="Cosine">cos</button>
+        <button onclick="appendValue('tan(')" aria-label="Tangent">tan</button>
+        <button onclick="appendValue('log(')" aria-label="Logarithm base 10">log</button>
+        <button onclick="appendValue('Math.exp(')" aria-label="Exponential">eˣ</button>
+
+        <button onclick="appendValue('7')" aria-label="7">7</button>
+        <button onclick="appendValue('8')" aria-label="8">8</button>
+        <button onclick="appendValue('9')" aria-label="9">9</button>
+        <button onclick="appendValue('/')" class="operator" aria-label="Divide">÷</button>
+        <button onclick="appendValue('(')" aria-label="Open parenthesis">(</button>
+
+        <button onclick="appendValue('4')" aria-label="4">4</button>
+        <button onclick="appendValue('5')" aria-label="5">5</button>
+        <button onclick="appendValue('6')" aria-label="6">6</button>
+        <button onclick="appendValue('*')" class="operator" aria-label="Multiply">×</button>
+        <button onclick="appendValue(')')" aria-label="Close parenthesis">)</button>
+
+        <button onclick="appendValue('1')" aria-label="1">1</button>
+        <button onclick="appendValue('2')" aria-label="2">2</button>
+        <button onclick="appendValue('3')" aria-label="3">3</button>
+        <button onclick="appendValue('-')" class="operator" aria-label="Subtract">−</button>
+        <button onclick="appendValue('Math.PI')" aria-label="Pi">π</button>
+
+        <button onclick="appendValue('0')" aria-label="0">0</button>
+        <button onclick="appendValue('.')" aria-label="Decimal point">.</button>
+        <button onclick="appendValue('Math.E')" aria-label="Euler's number">e</button>
+        <button onclick="appendValue('+')" class="operator" aria-label="Add">+</button>
+        <button id="equalsBtn" class="equal" aria-label="Equals">=</button>
+      </div>
+    </div>
+
+    <aside class="history-panel hidden" id="historyPanel" aria-label="Calculation history panel" role="complementary">
+      <h3>History</h3>
+      <div id="historyList" tabindex="0" aria-live="polite" aria-atomic="false" aria-relevant="additions"></div>
+      <div class="history-buttons">
+        <button id="clearHistoryBtn" aria-label="Clear history">Clear History</button>
+        <button id="downloadHistoryBtn" aria-label="Download history">Download History</button>
+      </div>
+    </aside>
+  </div>
+
+<script>
+  const display = document.getElementById('display');
+  const explanation = document.getElementById('explanation');
+  const historyList = document.getElementById('historyList');
+  const historyPanel = document.getElementById('historyPanel');
+  const toggleHistoryBtn = document.getElementById('toggleHistoryBtn');
+  const toggleThemeBtn = document.getElementById('toggleThemeBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const equalsBtn = document.getElementById('equalsBtn');
+  const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+  const downloadHistoryBtn = document.getElementById('downloadHistoryBtn');
+
+  let currentExpression = '';
+  let history = [];
+
+  function appendValue(val) {
+    if (val === 'Math.PI') {
+      currentExpression += 'Math.PI';
+      updateDisplay('π');
+    } else if (val === 'Math.E') {
+      currentExpression += 'Math.E';
+      updateDisplay('e');
+    } else if (val === 'Math.sqrt(') {
+      currentExpression += 'Math.sqrt(';
+      updateDisplay('√(');
+    } else {
+      currentExpression += val;
+      updateDisplay(currentExpression);
+    }
+    explanation.textContent = '';
+  }
+
+  function updateDisplay(val) {
+    display.textContent = val;
+  }
+
+  function clearDisplay() {
+    currentExpression = '';
+    updateDisplay('0');
+    explanation.textContent = '';
+  }
+
+  function backspace() {
+    if (currentExpression.length === 0) return;
+    currentExpression = currentExpression.slice(0, -1);
+    updateDisplay(currentExpression.length > 0 ? currentExpression : '0');
+    explanation.textContent = '';
+  }
+
+  function calculate() {
+    if (!currentExpression) return;
+
+    // Replace ^ with ** for exponentiation
+    const exp = currentExpression.replace(/\^/g, '**');
+
+    try {
+      // Sanitize: only allow numbers, Math, parentheses, operators
+      if (/[^-()\d/*+.%eE Mathsqrtsincoatanplogxpie]/.test(exp)) {
+        throw new Error('Invalid characters detected');
+      }
+
+      // eslint-disable-next-line no-eval
+      const result = eval(exp);
+
+      if (result === undefined) throw new Error('Invalid expression');
+
+      updateDisplay(String(result));
+      explanation.textContent = `Result of: ${currentExpression}`;
+      
+      // Add to history
+      history.push({ expression: currentExpression, result: result });
+      renderHistory();
+      
+      currentExpression = String(result);
+    } catch (err) {
+      updateDisplay('Error');
+      explanation.textContent = 'Error: Invalid Expression';
+      currentExpression = '';
+    }
+  }
+
+  function renderHistory() {
+    historyList.innerHTML = '';
+    if (history.length === 0) {
+      historyList.textContent = 'No history yet.';
+      return;
+    }
+    history.forEach((entry, idx) => {
+      const div = document.createElement('div');
+      div.className = 'history-entry';
+      div.tabIndex = 0;
+      div.title = `${entry.expression} = ${entry.result}`;
+      div.textContent = `${entry.expression} = ${entry.result}`;
+      div.addEventListener('click', () => {
+        currentExpression = entry.expression;
+        updateDisplay(currentExpression);
+        explanation.textContent = `Recalled from history: ${entry.expression}`;
+      });
+      div.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          div.click();
+        }
+      });
+      historyList.appendChild(div);
+    });
+  }
+
+  toggleHistoryBtn.addEventListener('click', () => {
+    if (historyPanel.classList.contains('hidden')) {
+      historyPanel.classList.remove('hidden');
+      historyPanel.classList.add('visible');
+      toggleHistoryBtn.setAttribute('aria-pressed', 'true');
+    } else {
+      historyPanel.classList.remove('visible');
+      historyPanel.classList.add('hidden');
+      toggleHistoryBtn.setAttribute('aria-pressed', 'false');
+    }
+  });
+
+  toggleThemeBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    const pressed = document.body.classList.contains('dark');
+    toggleThemeBtn.setAttribute('aria-pressed', pressed.toString());
+  });
+
+  clearBtn.addEventListener('click', () => {
+    clearDisplay();
+  });
+
+  equalsBtn.addEventListener('click', () => {
+    calculate();
+  });
+
+  clearHistoryBtn.addEventListener('click', () => {
+    if (confirm('Are you sure you want to clear the history?')) {
+      history = [];
+      renderHistory();
+    }
+  });
+
+  downloadHistoryBtn.addEventListener('click', () => {
+    if (history.length === 0) {
+      alert('No history to download.');
+      return;
+    }
+    const content = history
+      .map(entry => `${entry.expression} = ${entry.result}`)
+      .join('\n');
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'calculation_history.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  // Initialize
+  clearDisplay();
+  renderHistory();
+</script>
+</body>
+</html>
